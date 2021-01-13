@@ -1,7 +1,9 @@
-import { compose, createStore } from "redux";
+import { createStore, compose, CombinedState } from "redux";
 import reducers from "./reducers";
 
-const saveToLocalStorage = (state: unknown) => {
+const saveToLocalStorage = (
+  state: CombinedState<{ user: { data: any; auth: boolean } }>
+) => {
   try {
     localStorage.setItem("state", JSON.stringify(state));
   } catch (error) {

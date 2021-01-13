@@ -1,22 +1,9 @@
-interface Props {
-  auth: boolean;
-  data: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    entries: number;
-  } | null;
-}
-
-const initialState = {
-  auth: false,
-  data: null,
-};
-
 export const userReducer = (
-  _state: Props = initialState,
-  action: { type: "SET_USER" | "CLEAR_USER" | string; payload: Props["data"] }
+  state = {
+    data: null,
+    auth: false,
+  },
+  action: { type: "SET_USER" | "CLEAR_USER" | string; payload: object | null }
 ) => {
   switch (action.type) {
     case "SET_USER":
@@ -30,6 +17,6 @@ export const userReducer = (
         auth: false,
       };
     default:
-      return initialState;
+      return state;
   }
 };

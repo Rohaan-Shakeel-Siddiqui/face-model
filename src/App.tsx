@@ -1,33 +1,49 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Route, Switch } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { Dashboard, Register, SignIn } from "./pages";
 import { Loading, PrivateRoute } from "./components";
+import { useDispatch, useSelector } from "react-redux";
 import { verifyLocalStorage } from "./api";
-import { login } from "./actions";
+import { login, logout } from "./actions";
 
 const App = () => {
   const dispatch = useDispatch();
-
-  const { user } = JSON.parse(localStorage.getItem("state") as string);
   const [verified, setVerified] = useState(false);
 
   useEffect(() => {
-    if (user.auth === true) {
-      try {
-        verifyLocalStorage().then(({ status }) => {
-          if (status === 200) {
-            dispatch(login(user.data));
-            setVerified(true);
-          }
-        });
-      } catch {}
+    try {
+      const user =
+        JSON.parse(localStorage.getItem("state") as string).user ?? undefined;
+      if (user.auth) {
+        verifyLocalStorage()
+          .then(({ status }) => {
+            if (status === 200) {
+              dispatch(login(user.data));
+              setVerified(true);
+            } else {
+              dispatch(logout());
+            }
+          })
+          .catch(() => {
+            dispatch(logout());
+          });
+      } else {
+        dispatch(logout());
+      }
+    } catch {
+      dispatch(logout());
     }
   });
 
   return (
     <Switch>
-      <PrivateRoute auth={user.auth} path="/dashboard" redirect="/register">
+      <PrivateRoute
+        auth={useSelector(
+          (state: { user: { auth: boolean } }) => state.user.auth
+        )}
+        path="/dashboard"
+        redirect="/register"
+      >
         {verified ? (
           <div className="base-card">
             <Dashboard />
