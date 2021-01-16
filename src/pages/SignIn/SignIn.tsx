@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { Dispatch, SetStateAction, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { Redirect } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import { alertSnippets } from "../../utils";
 import {
   Alert,
@@ -11,17 +11,37 @@ import {
   Header,
   Input,
 } from "../../components";
+import { checkInRegistry } from "../../api";
+import { login } from "../../actions";
 
-const SignIn = () => {
+interface Props {
+  setVerified: Dispatch<SetStateAction<boolean>>;
+}
+
+const SignIn = ({ setVerified }: Props) => {
   const { register, handleSubmit, errors } = useForm({ criteriaMode: "all" });
   const [loading, setLoading] = useState(false);
+  const [invalid, setInvalid] = useState(false);
+  const dispatch = useDispatch();
+  const history = useHistory();
   const auth = useSelector(
     (state: { user: { auth: boolean } }) => state.user.auth
   );
 
   const onSubmit = (data: object) => {
-    console.log(data);
     setLoading(true);
+    checkInRegistry(data)
+      .then(({ response, status }) => {
+        if (status === 200) {
+          dispatch(login(response));
+          history.push("/dashboard");
+          setVerified(true);
+        } else {
+          setInvalid(true);
+          setLoading(false);
+        }
+      })
+      .catch((error) => console.error(error));
   };
 
   if (auth) {
@@ -55,6 +75,7 @@ const SignIn = () => {
         <Button loading={loading}>CONTINUE</Button>
       </form>
       <div className="grid gap-3 mt-3">
+        {invalid && <Alert type="danger">{alertSnippets.credentials}</Alert>}
         {(errors?.email?.types?.required ||
           errors?.password?.types?.required) && (
           <Alert>{alertSnippets.required}</Alert>
