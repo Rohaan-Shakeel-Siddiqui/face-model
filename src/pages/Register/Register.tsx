@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { Dispatch, SetStateAction, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { Redirect } from "react-router-dom";
+import { Redirect, useHistory } from "react-router-dom";
 import { alertSnippets, typeChecks } from "../../utils";
 import {
   Alert,
@@ -11,17 +11,37 @@ import {
   Header,
   Input,
 } from "../../components";
+import { addToRegistry } from "../../api";
+import { login } from "../../actions";
 
-const Register = () => {
+interface Props {
+  setVerified: Dispatch<SetStateAction<boolean>>;
+}
+
+const Register = ({ setVerified }: Props) => {
   const { register, handleSubmit, errors } = useForm({ criteriaMode: "all" });
   const [loading, setLoading] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
+  const dispatch = useDispatch();
+  const history = useHistory();
   const auth = useSelector(
     (state: { user: { auth: boolean } }) => state.user.auth
   );
 
   const onSubmit = (data: object) => {
-    console.log(data);
     setLoading(true);
+    addToRegistry(data)
+      .then(({ status, response }) => {
+        if (status === 201) {
+          dispatch(login(response));
+          history.push("/dashboard");
+          setVerified(true);
+        } else {
+          setDuplicate(true);
+          setLoading(false);
+        }
+      })
+      .catch((error) => console.error(error));
   };
 
   if (auth) {
@@ -75,6 +95,7 @@ const Register = () => {
         <Button loading={loading}>CONTINUE</Button>
       </form>
       <div className="grid gap-3 mt-3">
+        {duplicate && <Alert type="danger">{alertSnippets.duplicate}</Alert>}
         {errors?.email?.type === "pattern" && (
           <Alert type="warning" className="text-base">
             {alertSnippets.email}
