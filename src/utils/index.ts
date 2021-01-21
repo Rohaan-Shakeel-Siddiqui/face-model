@@ -1,3 +1,3 @@
 export { default as alertSnippets } from "./alertSnippets";
 export { default as typeChecks } from "./typeChecks";
-export { default as getStateOf } from "./getStateOf";
+export type { reduxState, clarifaiResponse } from "./propTypes";

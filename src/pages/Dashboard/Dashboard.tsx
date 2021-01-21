@@ -2,28 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Input, Button, Alert, Loading } from "../../components";
-import { alertSnippets } from "../../utils";
-import Anchor from "../../components/Layout/Anchor";
+import { Input, Button, Alert, Loading, Anchor } from "../../components";
+import { alertSnippets, reduxState, clarifaiResponse } from "../../utils";
 import { login, logout } from "../../actions";
 import { getImageDetection } from "../../api";
 
 const Dashboard = () => {
   const { register, handleSubmit } = useForm();
   const dispatch = useDispatch();
-  const user = useSelector(
-    (state: {
-      user: {
-        data: {
-          id: string;
-          first_name: string;
-          last_name: string;
-          email: string;
-          entries: number;
-        };
-      };
-    }) => state.user.data
-  );
+  const user = useSelector((state: reduxState) => state.user.data);
   const [badImage, setBadImage] = useState(false);
   const [image, setImage] = useState("");
   const [faceCount, setFaceCount] = useState(0);
@@ -34,52 +21,34 @@ const Dashboard = () => {
     []
   );
 
-  const getBoundingBox = useCallback(
-    (clarifai: { outputs: [{ data: { regions: [] } }] }) => {
-      try {
-        const data = clarifai.outputs[0].data.regions;
-        let stash: Array<React.ReactNode> = [];
-        data.forEach(
-          (
-            data: {
-              region_info: {
-                bounding_box: {
-                  left_col: number;
-                  top_row: number;
-                  right_col: number;
-                  bottom_row: number;
-                };
-              };
-            },
-            index: number
-          ) => {
-            const width = Number(outputImage.current!.width);
-            const height = Number(outputImage.current!.height);
-            stash.push(
-              <div
-                key={index}
-                className="bounding-box"
-                style={{
-                  left: data.region_info.bounding_box.left_col * width,
-                  top: data.region_info.bounding_box.top_row * height,
-                  right:
-                    width - data.region_info.bounding_box.right_col * width,
-                  bottom:
-                    height - data.region_info.bounding_box.bottom_row * height,
-                }}
-              />
-            );
-          }
+  const getBoundingBox = useCallback((clarifai: clarifaiResponse) => {
+    try {
+      const data = clarifai.outputs[0].data.regions;
+      let stash: Array<React.ReactNode> = [];
+      data.forEach((data, index: number) => {
+        const width = Number(outputImage.current!.width);
+        const height = Number(outputImage.current!.height);
+        stash.push(
+          <div
+            key={index}
+            className="bounding-box"
+            style={{
+              left: data.region_info.bounding_box.left_col * width,
+              top: data.region_info.bounding_box.top_row * height,
+              right: width - data.region_info.bounding_box.right_col * width,
+              bottom:
+                height - data.region_info.bounding_box.bottom_row * height,
+            }}
+          />
         );
-        setBoundingBoxes(stash);
-        setFaceCount(clarifai.outputs[0].data.regions.length);
-      } catch {
-        setBoundingBoxes([]);
-        setFaceCount(0);
-      }
-    },
-    []
-  );
+      });
+      setBoundingBoxes(stash);
+      setFaceCount(clarifai.outputs[0].data.regions.length);
+    } catch {
+      setBoundingBoxes([]);
+      setFaceCount(0);
+    }
+  }, []);
 
   useEffect(() => {
     if (user.entries >= 21) {
@@ -157,7 +126,9 @@ const Dashboard = () => {
                 {alertSnippets.demo} Click{" "}
                 <span
                   onClick={() =>
-                    setImage("https://www.atcofficial.com/images/headerBg.jpg")
+                    setImage(
+                      "https://portal.clarifai.com/cms-assets/20180320221615/face-002.jpg"
+                    )
                   }
                   className="border-b cursor-pointer"
                 >
