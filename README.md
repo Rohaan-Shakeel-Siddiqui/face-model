@@ -18,6 +18,10 @@ You can now run the frontend on your `localhost`.
 yarn start
 ```
 
+## Privacy
+
+All data that is collected through the web app is stored securely and will not be distributed to third parties. The data is collected to  improve current features or services in the app.
+
 ## License
 
 ```text
