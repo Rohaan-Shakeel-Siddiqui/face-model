@@ -4,7 +4,7 @@ interface Props {
 
 const ButtonLoading = ({ className }: Props) => {
   return (
-    <div>
+    <div className={className}>
       <span>
         <i />
         <i />
